@@ -25,8 +25,9 @@ const EventoPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [local, setLocal] = useState('');
   const [date, setDate] = useState('');
-  
-  const [editingEvento, setEditingEvento] = useState<Evento | null>(null);  // Novo estado para o evento sendo editado
+
+  const [editingEvento, setEditingEvento] = useState<Evento | null>(null); // Estado para evento em edição
+  const [expandedEventos, setExpandedEventos] = useState<Set<string>>(new Set()); // Estado para controlar quais eventos têm detalhes visíveis
 
   useEffect(() => {
     handleListEvento();
@@ -122,25 +123,33 @@ const EventoPage: React.FC = () => {
     setDate(evento.date);
   };
 
+  // Alternar visibilidade dos detalhes do evento
+  const handleToggleDetails = (eventoId: string) => {
+    const updatedExpandedEventos = new Set(expandedEventos);
+    if (expandedEventos.has(eventoId)) {
+      updatedExpandedEventos.delete(eventoId);
+    } else {
+      updatedExpandedEventos.add(eventoId);
+    }
+    setExpandedEventos(updatedExpandedEventos);
+  };
+
   return (
     <Container>
       <Title>Controle de Eventos</Title>
       <Form>
-
-      <Input
+        <Input
           type="text"
           placeholder="Título"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-
         <Input
           type="text"
           placeholder="Descrição"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-
         <Input
           type="text"
           placeholder="Local"
@@ -154,16 +163,30 @@ const EventoPage: React.FC = () => {
           onChange={(e) => setDate(e.target.value)}
         />
         {editingEvento ? (
-          <Button onClick={handleUpdateEvento}>Atualizar Evento</Button>  // Botão para atualizar
+          <Button onClick={handleUpdateEvento}>Atualizar Evento</Button>
         ) : (
-          <Button onClick={handleAddEvento}>Cadastrar Evento</Button>  // Botão para adicionar
+          <Button onClick={handleAddEvento}>Cadastrar Evento</Button>
         )}
       </Form>
-      
+
       <ExpenseList>
         {eventos.map((evento) => (
           <ExpenseItem key={evento._id}>
-            {evento.title} | {evento.description} | {evento.local} | {moment(evento.date).format("DD-MM-YYYY")}
+            {evento.title} | {moment(evento.date).format("DD-MMM-YYYY")}
+
+            {/* Botão para mostrar/ocultar os detalhes */}
+            <Button onClick={() => handleToggleDetails(evento._id)}>
+              Detalhes
+            </Button>
+
+            {/* Exibir os detalhes somente se o evento estiver expandido */}
+            {expandedEventos.has(evento._id) && (
+              <div>
+                <p>Descrição: {evento.description}</p>
+                <p>Local: {evento.local}</p>
+              </div>
+            )}
+
             <Button onClick={() => handleDeleteEvento(evento._id)} red>
               Excluir
             </Button>
